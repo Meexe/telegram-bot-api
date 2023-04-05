@@ -471,6 +471,10 @@ func (bot *BotAPI) StopReceivingUpdates() {
 // ListenForWebhook registers a http handler for a webhook.
 func (bot *BotAPI) ListenForWebhook(pattern string) UpdatesChannel {
 	ch := make(chan Update, bot.Buffer)
+	go func() {
+		<-bot.shutdownChannel
+		close(ch)
+	}()
 
 	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		update, err := bot.HandleUpdate(r)
@@ -491,6 +495,10 @@ func (bot *BotAPI) ListenForWebhook(pattern string) UpdatesChannel {
 // ListenForWebhookRespReqFormat registers a http handler for a single incoming webhook.
 func (bot *BotAPI) ListenForWebhookRespReqFormat(w http.ResponseWriter, r *http.Request) UpdatesChannel {
 	ch := make(chan Update, bot.Buffer)
+	go func() {
+		<-bot.shutdownChannel
+		close(ch)
+	}()
 
 	func(w http.ResponseWriter, r *http.Request) {
 		defer close(ch)
